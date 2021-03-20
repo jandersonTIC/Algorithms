@@ -4,9 +4,21 @@
  * 20/03/2021 17h as 20h20
  */
 
+//HTML src/sabado-20210320.html
+/*
+<input name="peso" id="inputPeso" />
+<input name="altura" id="inputAltura" />
+<button id="botaoCalcular">Calcular peso ideal</button>
+<div id="resultado"></div>
+*/
+
 //Entrada
-const altura = 1.6;
-const peso = 30;
+document.getElementById("botaoCalcular").addEventListener("click", () => {
+    const peso = document.getElementById("inputPeso").value;
+    const altura = document.getElementById("inputAltura").value;
+    const resultado = calcularPesoIdeal(peso, altura);
+    document.getElementById("resultado").innerText = resultado;
+});
 
 //Processamento
 function calcularPesoIdeal(peso, altura) {
@@ -21,12 +33,3 @@ function calcularPesoIdeal(peso, altura) {
     }
     return resultado;
 }
-
-let resultado1 = calcularPesoIdeal(peso, altura);
-let resultado2 = calcularPesoIdeal(100, 1.5);
-let resultado3 = calcularPesoIdeal(70, 1.69);
-
-//Saida
-console.log(resultado1);
-console.log(resultado2);
-console.log(resultado3);
