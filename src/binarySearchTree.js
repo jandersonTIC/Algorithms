@@ -1,5 +1,12 @@
-class Tree {
-    constructor(content = null, father = null, left = null, right = null) {
+class Node {
+    constructor(
+        key = null,
+        content = null,
+        father = null,
+        left = null,
+        right = null
+    ) {
+        this.key = key;
         this.content = content;
         this.father = father;
         this.left = left;
@@ -37,11 +44,11 @@ function leftRotation(tree) {
     return aux;
 }
 
-const d = new Tree("D");
-const e = new Tree("E", d);
-const c = new Tree("C", d);
-const b = new Tree("B", c);
-const a = new Tree("A", c);
+const d = new Node(5, "D");
+const e = new Node(4, "E", d);
+const c = new Node(3, "C", d);
+const b = new Node(2, "B", c);
+const a = new Node(1, "A", c);
 c.left = a;
 c.right = b;
 d.left = c;
