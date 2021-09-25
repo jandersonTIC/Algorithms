@@ -44,16 +44,54 @@ function leftRotation(tree) {
     return aux;
 }
 
-const d = new Node(5, "D");
-const e = new Node(4, "E", d);
-const c = new Node(3, "C", d);
-const b = new Node(2, "B", c);
-const a = new Node(1, "A", c);
-c.left = a;
-c.right = b;
-d.left = c;
-d.right = e;
+function treeHeight(tree) {
+    let leftHeight = 0;
+    let rightHeight = 0;
 
-console.log(d);
-console.log(rightRotation(d));
-console.log(d);
+    if (tree == null) {
+        return -1;
+    }
+    leftHeight = treeHeight(tree.left);
+    rightHeight = treeHeight(tree.right);
+
+    if (leftHeight > rightHeight) {
+        return leftHeight + 1;
+    }
+
+    return rightHeight + 1;
+}
+//        5
+//      /   \
+//     4     7
+//    /    /
+//   1     6
+//    \
+//     3
+function insert(node, tree) {
+    if (node == null || tree == null) {
+        return node;
+    }
+
+    if (node.key <= tree.key) {
+        tree.left = insert(node, tree.left);
+        tree.left.father = tree;
+        return tree;
+    } else if (node.key > tree.key) {
+        tree.right = insert(node, tree.right);
+        tree.right.father = tree;
+    }
+    return tree;
+}
+
+let tree = insert(new Node(5, "Five"), null);
+insert(new Node(4, "Four"), tree);
+insert(new Node(7, "Seven"), tree);
+insert(new Node(6, "Six"), tree);
+insert(new Node(1, "One"), tree);
+insert(new Node(3, "Three"), tree);
+
+console.log(treeHeight(tree));
+console.log(tree);
+
+//console.log(rightRotation(d));
+//console.log(d);
