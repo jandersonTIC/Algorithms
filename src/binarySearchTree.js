@@ -83,6 +83,22 @@ function insert(node, tree) {
     return tree;
 }
 
+function search(wantedKey, tree) {
+    if (tree == null) {
+        return tree;
+    }
+
+    if (wantedKey == tree.key) {
+        return tree;
+    }
+
+    if (wantedKey < tree.key) {
+        return search(wantedKey, tree.left);
+    } else if (wantedKey > tree.key) {
+        return search(wantedKey, tree.right);
+    }
+}
+
 let tree = insert(new Node(5, "Five"), null);
 insert(new Node(4, "Four"), tree);
 insert(new Node(7, "Seven"), tree);
@@ -92,6 +108,8 @@ insert(new Node(3, "Three"), tree);
 
 console.log(treeHeight(tree));
 console.log(tree);
+console.log(search(2, tree));
+console.log(search(6, tree));
 
 //console.log(rightRotation(d));
 //console.log(d);
