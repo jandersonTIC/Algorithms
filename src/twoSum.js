@@ -1,6 +1,6 @@
 const { quickSort } = require("./quicksort");
 
-// time O(n^2), space O(n)
+// time O(n^2), space O(1)
 function twoSumBruteForce(list, target) {
     //O(n)
     for (let i = 0; i < list.length - 1; i++) {
@@ -40,7 +40,7 @@ function twoSumLinearSmartSearch(list, target) {
     return 0;
 }
 
-//time O(n log n), space
+//time O(n log n), space O(n)
 function twoSumQuickSearch(list, target) {
     // O(1)
     let j = list.length - 1;
