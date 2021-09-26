@@ -103,89 +103,66 @@ function search(wantedKey, tree) {
         return search(wantedKey, tree.right);
     }
 }
-//     5            
-//    / \          
-//   4   7        4 aux theBiggest
-//  /   /          \
-// 1   6       5    7
-//  \         /    /
-//   3       1    6
-//            \ 
-//             3 
-function removeRotation(tree) {
-    let aux = tree.left;
-    let theBiggest;
-    if (aux.right != null) {
-        theBiggest = aux.right;
-    } else {
-        theBiggest = aux;
-    }
 
+function theBiggestKey(tree) {
+    let theBiggest = tree;
     while (theBiggest.right != null) {
         theBiggest = theBiggest.right;
     }
-    if (tree.right != null) {
-        theBiggest.right = tree.right;
-        tree.right.father = theBiggest;
-    }
-    let theBiggerParent = theBiggest.father
-    theBiggest.father = tree.father;
-    tree.father = theBiggerParent;
-
-    if (theBiggest.left != null) {
-        theBiggest.left.father = tree;
-        tree.left = theBiggest.left;
-    }
-
-    theBiggest.left
+    return theBiggest;
 }
 
-//        5
-//       / \
-//      4   7
-//     /   /
-//    1   6
-//     \
-//      3
-function remove(target) {
-    if (target == null) {
-        return target;
+
+function remove(targetKey, tree) {
+    let target = search(targetKey, tree);
+
+    if (target === null) return tree;
+
+    let father = target.father;
+    let subtree = removeHelper(target);
+
+    if (father === null) return subtree;
+    
+    if (father.left === target) {
+        father.left = subtree;
     }
 
+    if (father.right === target) {
+        father.right = subtree;
+    }
+    
+    return tree;
+}
+
+function removeHelper(target) {
+    let aux, p;
+
     if (target.left == null && target.right == null) {
-        let previousNode = target.father;
-        if (
-            previousNode.left != null &&
-            previousNode.left.key == target.key
-        ) {
-            previousNode.left = null;
-        } else {
-            previousNode.right = null;
-        }
         delete target;
         return null;
     }
 
-    if (target.left != null || target.right != null) {
-        if (target.left != null) {
-            target.left.father = target.father;
-            if (target.father.left !=null && target.father.left.key == target.key) {
-                target.father.left = target.left;
-            } else {
-                target.father.right = target.left;
-            }
+    if (target.left == null || target.right == null) {
+        if (target.left == null) {
+            aux = target.right;
         } else {
-            target.right.father = target.father;
-            if (target.father.left !=null && target.father.left.key == target.key) {
-                target.father.left = target.right;
-            } else {
-                target.father.right = target.right;
-            }
+            aux = target.left;
         }
-        return tree;
+        aux.father = target.father;
+        delete target;
+        return aux;
     }
 
-
+    aux = theBiggestKey(target.left);
+    target.key = aux.key;
+    target.content = aux.content;
+    p = aux.father;
+    if (p == target) {
+        p.left = removeHelper(aux);
+    } else {
+        p.right = removeHelper(aux);
+    }
+    return target;
 }
 
 let tree = insert(new Node(5, "Five"), null);
@@ -199,11 +176,13 @@ console.log(treeHeight(tree));
 console.log(tree);
 console.log(search(3, tree));
 console.log(search(6, tree));
-
 console.log(search(3, tree));
 
-let target = search(1, tree);
-console.log(remove(target, tree));
-
-//console.log(rightRotation(d));
-//console.log(d);
+//     5            
+//    / \          
+//   4   7        4 
+//  /   /       /   \
+// 1   6       1     7
+//  \           \   /
+//   3           3 6
+console.log(remove(5, tree));
