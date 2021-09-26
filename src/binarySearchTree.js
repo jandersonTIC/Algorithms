@@ -164,6 +164,29 @@ function removeHelper(target) {
     }
     return target;
 }
+//       5
+//      / \
+//     4   7
+//    /   /
+//   1   6
+function isValidBSTHelper(node, low, high) {
+    if (node === null) return true;
+
+    if (
+        node.key > low && 
+        node.key < high && 
+        isValidBSTHelper(node.left, low, node.key) && 
+        isValidBSTHelper(node.right, node.key, high)
+    ) {
+        return true;
+    }
+
+    return false;
+}
+
+function isValidBST(tree) {
+    return isValidBSTHelper(tree, Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY);
+}
 
 let tree = insert(new Node(5, "Five"), null);
 insert(new Node(4, "Four"), tree);
@@ -178,6 +201,8 @@ console.log(search(3, tree));
 console.log(search(6, tree));
 console.log(search(3, tree));
 
+console.log(`isValidBST: ${isValidBST(tree)}`);
+
 //     5            
 //    / \          
 //   4   7        4 
@@ -186,3 +211,19 @@ console.log(search(3, tree));
 //  \           \   /
 //   3           3 6
 console.log(remove(5, tree));
+
+
+let invalidBST = new Node(5);
+invalidBST.right = new Node(6);
+invalidBST.right.left = new Node(1);
+invalidBST.left = new Node(3)
+
+/*
+*       5
+*     /   \
+*    3     6
+*         /
+*        1
+*/
+
+console.log(`For a Invalid BST, the result of isValidBST is: ${isValidBST(invalidBST)}`);
