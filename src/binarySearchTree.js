@@ -13,12 +13,13 @@ class Node {
         this.right = right;
     }
 }
-
-//         D               C
-//        / \             / \
-//       C   E           A   D
-//      / \                 / \
-//     A   B               B   E
+//        5           4
+//       / \         / \
+//      4   7       1   5
+//     /   /         \   \
+//    1   6           3   7
+//     \                 / 
+//      3               6 
 function rightRotation(tree) {
     let aux = tree.left;
     tree.left = aux.right;
@@ -30,11 +31,15 @@ function rightRotation(tree) {
     return aux;
 }
 
-//       6              8
-//      / \            / \
-//     5   8          6   9
-//        / \        / \
-//       7   9      5   7
+//     5            7
+//    / \          /
+//   4   7        5
+//  /   /        / \
+// 1   6        4   6
+//  \          /
+//   3        1
+//             \
+//              3
 function leftRotation(tree) {
     let aux = tree.right;
     tree.rigth = aux.left;
@@ -61,12 +66,12 @@ function treeHeight(tree) {
     return rightHeight + 1;
 }
 //        5
-//      /   \
-//     4     7
-//    /    /
-//   1     6
-//    \
-//     3
+//       / \
+//      4   7
+//     /   /
+//    1   6
+//     \
+//      3
 function insert(node, tree) {
     if (node == null || tree == null) {
         return node;
@@ -82,7 +87,7 @@ function insert(node, tree) {
     }
     return tree;
 }
-
+//time O(height) => O(log n), space O(n)
 function search(wantedKey, tree) {
     if (tree == null) {
         return tree;
@@ -98,6 +103,90 @@ function search(wantedKey, tree) {
         return search(wantedKey, tree.right);
     }
 }
+//     5            
+//    / \          
+//   4   7        4 aux theBiggest
+//  /   /          \
+// 1   6       5    7
+//  \         /    /
+//   3       1    6
+//            \ 
+//             3 
+function removeRotation(tree) {
+    let aux = tree.left;
+    let theBiggest;
+    if (aux.right != null) {
+        theBiggest = aux.right;
+    } else {
+        theBiggest = aux;
+    }
+
+    while (theBiggest.right != null) {
+        theBiggest = theBiggest.right;
+    }
+    if (tree.right != null) {
+        theBiggest.right = tree.right;
+        tree.right.father = theBiggest;
+    }
+    let theBiggerParent = theBiggest.father
+    theBiggest.father = tree.father;
+    tree.father = theBiggerParent;
+
+    if (theBiggest.left != null) {
+        theBiggest.left.father = tree;
+        tree.left = theBiggest.left;
+    }
+
+    theBiggest.left
+}
+
+//        5
+//       / \
+//      4   7
+//     /   /
+//    1   6
+//     \
+//      3
+function remove(target) {
+    if (target == null) {
+        return target;
+    }
+
+    if (target.left == null && target.right == null) {
+        let previousNode = target.father;
+        if (
+            previousNode.left != null &&
+            previousNode.left.key == target.key
+        ) {
+            previousNode.left = null;
+        } else {
+            previousNode.right = null;
+        }
+        delete target;
+        return null;
+    }
+
+    if (target.left != null || target.right != null) {
+        if (target.left != null) {
+            target.left.father = target.father;
+            if (target.father.left !=null && target.father.left.key == target.key) {
+                target.father.left = target.left;
+            } else {
+                target.father.right = target.left;
+            }
+        } else {
+            target.right.father = target.father;
+            if (target.father.left !=null && target.father.left.key == target.key) {
+                target.father.left = target.right;
+            } else {
+                target.father.right = target.right;
+            }
+        }
+        return tree;
+    }
+
+
+}
 
 let tree = insert(new Node(5, "Five"), null);
 insert(new Node(4, "Four"), tree);
@@ -108,8 +197,13 @@ insert(new Node(3, "Three"), tree);
 
 console.log(treeHeight(tree));
 console.log(tree);
-console.log(search(2, tree));
+console.log(search(3, tree));
 console.log(search(6, tree));
+
+console.log(search(3, tree));
+
+let target = search(1, tree);
+console.log(remove(target, tree));
 
 //console.log(rightRotation(d));
 //console.log(d);
