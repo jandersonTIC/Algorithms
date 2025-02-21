@@ -55,6 +55,9 @@ test {
 Vamos usar como exemplo um serviço de usuários:
 
 ```java
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 @Service
 public class UsuarioService {
     @Autowired
@@ -74,6 +77,18 @@ public class UsuarioService {
 ### 3.2 Classe de Teste
 
 ```java
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import java.util.Optional;
+
 @ExtendWith(MockitoExtension.class)
 class UsuarioServiceTest {
     
@@ -116,6 +131,11 @@ class UsuarioServiceTest {
 ### 4.1 Exemplo de Controller
 
 ```java
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
 @RestController
 @RequestMapping("/api/usuarios")
 public class UsuarioController {
@@ -140,6 +160,18 @@ public class UsuarioController {
 ### 4.2 Classe de Teste do Controller
 
 ```java
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 @WebMvcTest(UsuarioController.class)
 class UsuarioControllerTest {
     
@@ -197,9 +229,38 @@ class UsuarioControllerTest {
 
 ## 5. Testando Integrações com Serviços Externos
 
-### 5.1 Exemplo de Serviço com Integração Externa
+### Classes de Modelo
 
 ```java
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class NotificacaoRequest {
+    private Long clienteId;
+    private String mensagem;
+}
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class NotificacaoResponse {
+    private String status;
+    private String message;
+}
+```
+
+### 5.2 Exemplo de Serviço com Integração Externa
+
+```java
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
 @Service
 public class NotificacaoService {
     
@@ -238,9 +299,21 @@ public class PedidoService {
 }
 ```
 
-### 5.2 Teste do Serviço com Mock do RestTemplate
+### 5.3 Teste do Serviço com Mock do RestTemplate
 
 ```java
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.client.RestTemplate;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 @ExtendWith(MockitoExtension.class)
 class NotificacaoServiceTest {
     
@@ -285,9 +358,19 @@ class NotificacaoServiceTest {
 }
 ```
 
-### 5.3 Teste com WireMock
+### 5.4 Teste com WireMock
 
 ```java
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static org.assertj.core.api.Assertions.assertThat;
+
 @SpringBootTest
 class NotificacaoServiceIntegrationTest {
     
@@ -338,7 +421,7 @@ class NotificacaoServiceIntegrationTest {
 }
 ```
 
-### 5.4 Teste do PedidoService com Mock do NotificacaoService
+### 5.5 Teste do PedidoService com Mock do NotificacaoService
 
 ```java
 @ExtendWith(MockitoExtension.class)
