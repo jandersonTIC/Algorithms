@@ -14,6 +14,8 @@ Este tutorial vai mostrar como criar testes unitários para aplicações Spring 
 
 ## 2. Configuração do Ambiente
 
+### 2.1 Configuração com Maven
+
 Primeiro, adicione as dependências necessárias no seu `pom.xml`:
 
 ```xml
@@ -25,6 +27,25 @@ Primeiro, adicione as dependências necessárias no seu `pom.xml`:
         <scope>test</scope>
     </dependency>
 </dependencies>
+```
+
+### Configuração com Gradle
+
+Para projetos usando Gradle, adicione as dependências no seu `build.gradle`:
+
+```gradle
+dependencies {
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'com.github.tomakehurst:wiremock-jre8:2.35.0'
+    
+    // Para usar Jupiter API explicitamente
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+}
+
+test {
+    useJUnitPlatform()
+}
 ```
 
 ## 3. Testando Classes de Serviço
@@ -174,7 +195,187 @@ class UsuarioControllerTest {
 }
 ```
 
-## 5. Boas Práticas
+## 5. Testando Integrações com Serviços Externos
+
+### 5.1 Exemplo de Serviço com Integração Externa
+
+```java
+@Service
+public class NotificacaoService {
+    
+    @Autowired
+    private RestTemplate restTemplate;
+    
+    @Value("${notificacao.api.url}")
+    private String apiUrl;
+    
+    public NotificacaoResponse enviarNotificacao(NotificacaoRequest request) {
+        return restTemplate.postForObject(
+            apiUrl + "/notificacoes",
+            request,
+            NotificacaoResponse.class
+        );
+    }
+}
+
+@Service
+public class PedidoService {
+    
+    @Autowired
+    private NotificacaoService notificacaoService;
+    
+    public void processarPedido(Pedido pedido) {
+        // Lógica de processamento do pedido
+        
+        // Enviar notificação
+        NotificacaoRequest notificacao = new NotificacaoRequest(
+            pedido.getClienteId(),
+            "Seu pedido #" + pedido.getId() + " foi processado!"
+        );
+        
+        notificacaoService.enviarNotificacao(notificacao);
+    }
+}
+```
+
+### 5.2 Teste do Serviço com Mock do RestTemplate
+
+```java
+@ExtendWith(MockitoExtension.class)
+class NotificacaoServiceTest {
+    
+    @Mock
+    private RestTemplate restTemplate;
+    
+    @InjectMocks
+    private NotificacaoService notificacaoService;
+    
+    @Value("${notificacao.api.url}")
+    private String apiUrl;
+    
+    @Test
+    void deveEnviarNotificacaoComSucesso() {
+        // Arrange
+        NotificacaoRequest request = new NotificacaoRequest(
+            1L, "Mensagem de teste"
+        );
+        NotificacaoResponse expectedResponse = new NotificacaoResponse(
+            "SUCCESS", "Notificação enviada"
+        );
+        
+        when(restTemplate.postForObject(
+            apiUrl + "/notificacoes",
+            request,
+            NotificacaoResponse.class
+        )).thenReturn(expectedResponse);
+        
+        // Act
+        NotificacaoResponse response = notificacaoService
+            .enviarNotificacao(request);
+        
+        // Assert
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo("SUCCESS");
+        verify(restTemplate).postForObject(
+            eq(apiUrl + "/notificacoes"),
+            eq(request),
+            eq(NotificacaoResponse.class)
+        );
+    }
+}
+```
+
+### 5.3 Teste com WireMock
+
+```java
+@SpringBootTest
+class NotificacaoServiceIntegrationTest {
+    
+    @Autowired
+    private NotificacaoService notificacaoService;
+    
+    private WireMockServer wireMockServer;
+    
+    @BeforeEach
+    void setup() {
+        wireMockServer = new WireMockServer(WireMockConfiguration.options().port(8089));
+        wireMockServer.start();
+        WireMock.configureFor("localhost", 8089);
+    }
+    
+    @AfterEach
+    void teardown() {
+        wireMockServer.stop();
+    }
+    
+    @Test
+    void deveEnviarNotificacaoUsandoWireMock() {
+        // Arrange
+        NotificacaoRequest request = new NotificacaoRequest(
+            1L, "Mensagem de teste"
+        );
+        
+        stubFor(post(urlEqualTo("/notificacoes"))
+            .withRequestBody(containing("Mensagem de teste"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("{\"status\":\"SUCCESS\",\"message\":\"Notificação enviada\"}")
+            ));
+        
+        // Act
+        NotificacaoResponse response = notificacaoService
+            .enviarNotificacao(request);
+        
+        // Assert
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo("SUCCESS");
+        
+        // Verify the request was made
+        verify(postRequestedFor(urlEqualTo("/notificacoes"))
+            .withRequestBody(containing("Mensagem de teste")));
+    }
+}
+```
+
+### 5.4 Teste do PedidoService com Mock do NotificacaoService
+
+```java
+@ExtendWith(MockitoExtension.class)
+class PedidoServiceTest {
+    
+    @Mock
+    private NotificacaoService notificacaoService;
+    
+    @InjectMocks
+    private PedidoService pedidoService;
+    
+    @Test
+    void deveProcessarPedidoEEnviarNotificacao() {
+        // Arrange
+        Pedido pedido = new Pedido(1L, 1L, "Produto teste");
+        NotificacaoResponse mockResponse = new NotificacaoResponse(
+            "SUCCESS", "Notificação enviada"
+        );
+        
+        when(notificacaoService.enviarNotificacao(any(NotificacaoRequest.class)))
+            .thenReturn(mockResponse);
+        
+        // Act
+        pedidoService.processarPedido(pedido);
+        
+        // Assert
+        verify(notificacaoService).enviarNotificacao(
+            argThat(request -> 
+                request.getClienteId().equals(pedido.getClienteId()) &&
+                request.getMensagem().contains(pedido.getId().toString())
+            )
+        );
+    }
+}
+```
+
+## 6. Boas Práticas
 
 1. **Nomenclatura dos Testes:**
    - Use nomes descritivos que indicam o cenário sendo testado
